@@ -1,30 +1,21 @@
 import { useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
-interface ServerToClientEvents {
-  message: (data: string) => void;
-}
-
-interface ClientToServerEvents {
-  message: (data: string) => void;
-}
-
-export function useWebSocket(url: string) {
-  const [socket, setSocket] = useState<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
+export function useWebSocket(url: string, userId: string) {
+  const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const socketIo = io(url, {
-      transports: ["websocket"], // ✅ Ensure WebSocket transport
-    });
+    const socketIo = io(url, { transports: ["websocket"] });
 
     socketIo.on("connect", () => {
-      console.log("✅ Connected to WebSocket server");
+      console.log("✅ Connected to WebSocket");
       setIsConnected(true);
+      socketIo.emit("register", userId);
     });
 
     socketIo.on("disconnect", () => {
-      console.log("❌ Disconnected from WebSocket server");
+      console.log("❌ Disconnected from WebSocket");
       setIsConnected(false);
     });
 
@@ -33,7 +24,7 @@ export function useWebSocket(url: string) {
     return () => {
       socketIo.disconnect();
     };
-  }, [url]);
+  }, [url, userId]);
 
   return { socket, isConnected };
 }
